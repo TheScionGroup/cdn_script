@@ -82,7 +82,6 @@ const applicationObserver = new MutationObserver((mutationsList, observer) => {
       console.error("Error:", error);
     });
   }
-  observer.disconnect();
 });
 
 applicationObserver.observe(document.body, { childList: true, subtree: true });
