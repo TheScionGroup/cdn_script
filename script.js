@@ -84,4 +84,4 @@ const applicationObserver = new MutationObserver((mutationsList, observer) => {
   }
 });
 
-applicationObserver.observe(document.body, { childList: true, subtree: true });
+applicationObserver.observe(document, { childList: true, subtree: true });
