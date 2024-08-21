@@ -1,4 +1,4 @@
-const applicationObserver = new MutationObserver((mutationsList, observer) => {
+function applicationCode() {
   function findKeyValueIterative(obj, key) {
     if (obj === null || typeof obj !== 'object') {
         return undefined;
@@ -82,6 +82,6 @@ const applicationObserver = new MutationObserver((mutationsList, observer) => {
       console.error("Error:", error);
     });
   }
-});
+};
 
-applicationObserver.observe(document, { childList: true, subtree: true });
+setTimeout(applicationCode, 3000);
