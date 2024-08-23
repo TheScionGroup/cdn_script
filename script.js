@@ -62,7 +62,7 @@ function applicationCode() {
     google_analytics_id: googleAnalyticsId,
     application_id_from_dataLayer: applicationEntrataId,
     origin_url: window.location.origin,
-    timestamp: new Date().toLocaleString(),
+    timestamp: new Date().toISOString(),
   };
 
   if (applicantFormId || applicationFormId || applicationEntrataId) {
