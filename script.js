@@ -1,3 +1,16 @@
+function observeGoogleAnalytics() {
+  const observer = new MutationObserver(() => {
+    const googleAnalyticsId = findKeyValueIterative(removeCircularReferences(window), 'client_id');
+    if (googleAnalyticsId) {
+      observer.disconnect(); // Stop observing once the client_id is found
+      applicationCode(); // Run the main code
+    }
+  });
+
+  // Observe changes in the document and its subtree
+  observer.observe(document, { childList: true, subtree: true });
+}
+
 function applicationCode() {
   function findKeyValueIterative(obj, key) {
     if (obj === null || typeof obj !== 'object') {
@@ -84,4 +97,4 @@ function applicationCode() {
   }
 };
 
-setTimeout(applicationCode, 3000);
+setTimeout(observeGoogleAnalytics, 3000);
