@@ -1,73 +1,77 @@
-function observeGoogleAnalytics() {
-  const observer = new MutationObserver(() => {
-    const googleAnalyticsId = findKeyValueIterative(removeCircularReferences(window), 'client_id');
-    if (googleAnalyticsId) {
-      observer.disconnect(); // Stop observing once the client_id is found
-      applicationCode(); // Run the main code
-    }
-  });
+function findKeyValueIterative(obj, key) {
+  if (obj === null || typeof obj !== 'object') {
+    return undefined;
+  }
 
-  // Observe changes in the document and its subtree
-  observer.observe(document, { childList: true, subtree: true });
+  const stack = [obj];
+
+  while (stack.length > 0) {
+    const current = stack.pop();
+
+    if (current !== null && typeof current === 'object') {
+      if (key in current) {
+        return current[key];
+      }
+
+      for (let k in current) {
+        if (Object.prototype.hasOwnProperty.call(current, k)) {
+          stack.push(current[k]);
+        }
+      }
+    }
+  }
+
+  return undefined; // Return undefined if the key is not found
 }
 
-function applicationCode() {
-  function findKeyValueIterative(obj, key) {
-    if (obj === null || typeof obj !== 'object') {
-        return undefined;
-    }
+function removeCircularReferences(e, r = new WeakSet()) {
+  if (e !== null && typeof e === 'object') {
+    if (r.has(e)) return;
 
-    const stack = [obj];
+    r.add(e);
 
-    while (stack.length > 0) {
-        const current = stack.pop();
-
-        if (current !== null && typeof current === 'object') {
-            if (key in current) {
-                return current[key];
-            }
-
-            for (let k in current) {
-                if (current.hasOwnProperty(k)) {
-                    stack.push(current[k]);
-                }
-            }
+    if (Array.isArray(e)) {
+      return e.map(item => removeCircularReferences(item, r));
+    } else {
+      const result = {};
+      for (const key in e) {
+        if (Object.prototype.hasOwnProperty.call(e, key)) {
+          const value = e[key];
+          if (typeof value === 'function') {
+            // Optionally exclude functions
+            continue;
+          }
+          result[key] = removeCircularReferences(value, r);
         }
+      }
+      return result;
     }
-
-    return undefined; // Return undefined if the key is not found
   }
+  return e;
+}
 
-  function removeCircularReferences(e, r = new WeakSet()) {
-    if (e !== null && typeof e === 'object') {
-        if (r.has(e)) return;
+function observeGoogleAnalytics() {
+  const googleAnalyticsId = findKeyValueIterative(removeCircularReferences(window), 'client_id');
+  if (googleAnalyticsId) {
+    applicationCode(googleAnalyticsId);
+  } else {
+    const observer = new MutationObserver(() => {
+      const googleAnalyticsId = findKeyValueIterative(removeCircularReferences(window), 'client_id');
+      if (googleAnalyticsId) {
+        observer.disconnect(); // Stop observing once the client_id is found
+        applicationCode(googleAnalyticsId); // Run the main code
+      }
+    });
 
-        r.add(e);
-
-        if (Array.isArray(e)) {
-            return e.map(item => removeCircularReferences(item, r));
-        } else {
-            const result = {};
-            for (const key in e) {
-                if (Object.prototype.hasOwnProperty.call(e, key)) {
-                    const value = e[key];
-                    if (typeof value === 'function') {
-                        // Optionally exclude functions
-                        continue;
-                    }
-                    result[key] = removeCircularReferences(value, r);
-                }
-            }
-            return result;
-        }
-    }
-    return e;
+    // Observe changes in the document and its subtree
+    observer.observe(document, { childList: true, subtree: true });
   }
+}
 
-  const applicantFormId = document.querySelector('input[name="application[applicant][id]"]')?.value
-  const applicationFormId = document.querySelector('input[name="application[application][id]"]')?.value
-  const googleAnalyticsId = findKeyValueIterative(removeCircularReferences(window), 'client_id')
-  const applicationEntrataId = typeof dataLayer !== 'undefined' && findKeyValueIterative(dataLayer, 'entrata_user_id')
+function applicationCode(googleAnalyticsId) {
+  const applicantFormId = document.querySelector('input[name="application[applicant][id]"]')?.value;
+  const applicationFormId = document.querySelector('input[name="application[application][id]"]')?.value;
+  const applicationEntrataId = typeof dataLayer !== 'undefined' && findKeyValueIterative(dataLayer, 'entrata_user_id');
 
   const data = {
     applicant_id_from_form: applicantFormId,
@@ -86,15 +90,15 @@ function applicationCode() {
       mode: "cors",
       body: JSON.stringify(data),
       headers: {
-          "Content-Type": "application/json; charset=UTF-8",
+        "Content-Type": "application/json; charset=UTF-8",
       }
     })
-    .then(response => console.log("Response:", response.json()))
+    .then(response => response.json())
     .then(data => console.log("Success:", data))
     .catch(error => {
       console.error("Error:", error);
     });
   }
-};
+}
 
 setTimeout(observeGoogleAnalytics, 3000);
